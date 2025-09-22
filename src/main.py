@@ -26,37 +26,43 @@ while True:
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     result = hands.process(rgb)
 
-    drawing = False
+    mode_text = ""  # text to show current mode
+
     if result.multi_hand_landmarks:
         for hand_landmarks in result.multi_hand_landmarks:
-            it = hand_landmarks.landmark[8]
-            ip = hand_landmarks.landmark[6]
-            pt = hand_landmarks.landmark[20]
-            pp = hand_landmarks.landmark[18]
+            it, ip = hand_landmarks.landmark[8], hand_landmarks.landmark[6]   # index tip/pip
+            mt, mp_ = hand_landmarks.landmark[12], hand_landmarks.landmark[10]  # middle tip/pip
+            rt, rp = hand_landmarks.landmark[16], hand_landmarks.landmark[14]  # ring tip/pip
+            pt, pp = hand_landmarks.landmark[20], hand_landmarks.landmark[18]  # pinky tip/pip
 
             x, y = int(it.x * w), int(it.y * h)
 
+            # Draw Mode (index up, pinky down)
             if it.y < ip.y and pt.y > pp.y:
                 cv2.circle(canvas, (x, y), 12, (0, 0, 0), -1)
-                drawing = True
+                mode_text = "Drawing"
+
+            # Erase Mode (all fingers down = fist)
+            elif it.y > ip.y and mt.y > mp_.y and rt.y > rp.y and pt.y > pp.y:
+                cv2.circle(canvas, (x, y), 40, (255, 255, 255), -1)
+                mode_text = "Erasing"
 
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
     gray = cv2.cvtColor(canvas, cv2.COLOR_BGR2GRAY)
-    _, ink_mask = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)  # ink_mask==255 where ink exists
-
+    _, ink_mask = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)
     frame[ink_mask == 255] = (0, 0, 0)
 
-    if drawing:
-        cv2.putText(frame, "Drawing", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255),
-                    2)
+    if mode_text:
+        cv2.putText(frame, mode_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+                    1, (0, 0, 255), 2)
 
     cv2.imshow("Virtual Whiteboard", frame)
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
         break
-    if key == ord('c'):  # clear canvas (reset to white)
+    if key == ord('c'):
         canvas[:] = 255
 
 cap.release()
