@@ -11,6 +11,7 @@ mp_drawing = mp.solutions.drawing_utils
 hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_confidence=0.7)
 
 canvas = None
+show_whiteboard = False
 
 while True:
     ret, frame = cap.read()
@@ -49,21 +50,27 @@ while True:
 
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-    gray = cv2.cvtColor(canvas, cv2.COLOR_BGR2GRAY)
-    _, ink_mask = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)
-    frame[ink_mask == 255] = (0, 0, 0)
+    if show_whiteboard:
+        display = canvas.copy()
+    else:
+        gray = cv2.cvtColor(canvas, cv2.COLOR_BGR2GRAY)
+        _, ink_mask = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)
+        frame[ink_mask == 255] = (0, 0, 0)
+        display = frame
 
     if mode_text:
         cv2.putText(frame, mode_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
                     1, (0, 0, 255), 2)
 
-    cv2.imshow("Virtual Whiteboard", frame)
+    cv2.imshow("Virtual Whiteboard", display)
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
         break
     if key == ord('c'):
         canvas[:] = 255
+    if key == ord('s'):
+        show_whiteboard = not show_whiteboard
 
 cap.release()
 cv2.destroyAllWindows()
