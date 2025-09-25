@@ -12,7 +12,7 @@ It uses your **webcam feed** and tracks your **hand gestures** to draw or erase 
 - 🧽 **Eraser mode**: Make a **fist (all fingers down)** → erase with a big white brush.  
 - ⏹ Quit the program anytime by pressing **`q`**.
 - 🔄 Press **`c`** to **clear the canvas**.
-- 🔄 Press **`w`** to **switch from camera feed to whiteboard**.
+- 🔄 Press **`s`** to **switch from camera feed to whiteboard**.
 
 ---
 

@@ -51,12 +51,22 @@ while True:
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
     if show_whiteboard:
-        display = canvas.copy()
+        display = canvas.copy()  # copy canvas so tracker isn't permanent
+        if result.multi_hand_landmarks:
+            for hand_landmarks in result.multi_hand_landmarks:
+                it = hand_landmarks.landmark[8]
+                x, y = int(it.x * w), int(it.y * h)
+                cv2.circle(display, (x, y), 10, (0, 0, 255), 2)  # tracker on COPY
     else:
         gray = cv2.cvtColor(canvas, cv2.COLOR_BGR2GRAY)
         _, ink_mask = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)
         frame[ink_mask == 255] = (0, 0, 0)
         display = frame
+        if result.multi_hand_landmarks:
+            for hand_landmarks in result.multi_hand_landmarks:
+                it = hand_landmarks.landmark[8]
+                x, y = int(it.x * w), int(it.y * h)
+                cv2.circle(display, (x, y), 10, (0, 0, 255), 2)  # tracker on live feed
 
     if mode_text:
         cv2.putText(frame, mode_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
