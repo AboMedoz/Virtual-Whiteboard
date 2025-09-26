@@ -69,7 +69,7 @@ while True:
                 cv2.circle(display, (x, y), 10, (0, 0, 255), 2)  # tracker on live feed
 
     if mode_text:
-        cv2.putText(frame, mode_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+        cv2.putText(display, mode_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
                     1, (0, 0, 255), 2)
 
     cv2.imshow("Virtual Whiteboard", display)
