@@ -2,6 +2,8 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
+from helpers import check_palette_selection, draw_palette
+
 cap = cv2.VideoCapture(0)
 cap.set(3, 1280)
 cap.set(4, 720)
@@ -12,6 +14,14 @@ hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracki
 
 canvas = None
 show_whiteboard = False
+
+# Color palette (BGR)
+colors = [(0, 0, 255),   # Red
+          (0, 255, 0),   # Green
+          (255, 0, 0),   # Blue
+          (0, 0, 0)]     # Black
+color_names = ["Red", "Green", "Blue", "Black"]
+current_color = (0, 0, 0)  # default black
 
 while True:
     ret, frame = cap.read()
@@ -38,9 +48,14 @@ while True:
 
             x, y = int(it.x * w), int(it.y * h)
 
+            selected = check_palette_selection(x, y, colors)
+            if selected:
+                current_color = selected
+                mode_text = f"Color changed"
+
             # Draw Mode (index up, pinky down)
             if it.y < ip.y and pt.y > pp.y:
-                cv2.circle(canvas, (x, y), 12, (0, 0, 0), -1)
+                cv2.circle(canvas, (x, y), 12, current_color, -1)
                 mode_text = "Drawing"
 
             # Erase Mode (all fingers down = fist)
@@ -56,21 +71,22 @@ while True:
             for hand_landmarks in result.multi_hand_landmarks:
                 it = hand_landmarks.landmark[8]
                 x, y = int(it.x * w), int(it.y * h)
-                cv2.circle(display, (x, y), 10, (0, 0, 255), 2)  # tracker on COPY
+                cv2.circle(display, (x, y), 10, (128, 0, 128), 2)  # tracker on COPY
     else:
-        gray = cv2.cvtColor(canvas, cv2.COLOR_BGR2GRAY)
-        _, ink_mask = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)
-        frame[ink_mask == 255] = (0, 0, 0)
+        ink_mask = np.any(canvas != 255, axis=-1)
+        frame[ink_mask] = canvas[ink_mask]
         display = frame
         if result.multi_hand_landmarks:
             for hand_landmarks in result.multi_hand_landmarks:
                 it = hand_landmarks.landmark[8]
                 x, y = int(it.x * w), int(it.y * h)
-                cv2.circle(display, (x, y), 10, (0, 0, 255), 2)  # tracker on live feed
+                cv2.circle(display, (x, y), 10, (128, 0, 128), 2)  # tracker on live feed
 
     if mode_text:
         cv2.putText(display, mode_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
                     1, (0, 0, 255), 2)
+
+    draw_palette(display, colors)
 
     cv2.imshow("Virtual Whiteboard", display)
 
